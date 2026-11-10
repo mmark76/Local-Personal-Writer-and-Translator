@@ -1,0 +1,5 @@
+# Acceptance criteria
+
+R0: supplied approved standards are incorporated without substantive change and their fidelity to the original approved texts is established; source revisions and applicable ENG adoption are traceable; decisions and risk owners are recorded; references and scope are internally consistent; gates are reviewed with evidence. Fidelity to the original conversation and complete authority review remain unverified and block acceptance.
+
+Candidate R1 criteria, pending separate approval: a synthetic notes input produces a reviewable draft; representative Greek and English examples can be translated in both directions and reviewed for meaning and terminology; original remains available independently after generation, error and cancellation; the user explicitly approves output; local provider unavailability produces an actionable failure without cloud fallback; file operations require user authorization. Specific quality thresholds, test corpus, supported formats, hardware and performance targets remain undecided. No criterion is verified by this document.

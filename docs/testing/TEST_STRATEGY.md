@@ -1,0 +1,5 @@
+# Test strategy
+
+R0: check source provenance, approved texts, internal links, traceability, consistency, secrets and gate evidence. Supplied ZIP checksums can establish copy integrity, not fidelity to the original conversation; the latter remains unverified.
+
+R1 planning: use synthetic bilingual notes and translation examples, review quality against approved criteria, test source/output separation under error and cancellation, explicit approval and authorized file actions. Cover the cases in SEC-001 §15, HLT-001 §13 and SAF-001 §14, including prompt-based actions, missing models, interrupted connections, changed numbers, omission and unsupported claims. Test provider unavailability and verify no remote fallback with automated tests and appropriate network observation. Add repeatable automated tests for critical logic and integration boundaries once stack and interfaces are selected. Define realistic hardware, model, performance and accessibility conditions before acceptance. No R1 test exists or has passed.
