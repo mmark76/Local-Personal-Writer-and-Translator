@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ollama
 import model_manager
 import argos_translation
+import nlg_writer
 
 STATIC = Path(__file__).resolve().parent / "static"
 TOKEN = secrets.token_urlsafe(32)
@@ -125,12 +126,15 @@ class Handler(BaseHTTPRequestHandler):
             text, model, task = request.get("text"), request.get("model"), request.get("task")
             engine = request.get("engine", "ollama")
             if (not isinstance(text, str) or not text.strip() or len(text) > MAX_INPUT
-                    or task not in ("write", "translate") or engine not in ("ollama", "argos")
-                    or (task == "write" and engine != "ollama")
+                    or task not in ("write", "translate")
+                    or (task == "write" and engine not in ("ollama", "nlg"))
+                    or (task == "translate" and engine not in ("ollama", "argos"))
                     or (engine == "ollama" and not isinstance(model, str))):
                 raise ValueError()
         except (ValueError, UnicodeDecodeError):
             return self.respond(400, {"error": "Ελέγξτε το κείμενο και το μοντέλο."})
+        if engine == "nlg":
+            return self.respond(200, nlg_writer.generate(text))
         if not BUSY.acquire(blocking=False):
             return self.respond(409, {"error": "Μια εργασία βρίσκεται ήδη σε εξέλιξη."})
         try:

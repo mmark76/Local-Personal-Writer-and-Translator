@@ -24,16 +24,16 @@ function resetDraft() { draftApproved = false; translationValid = false; el("tra
 function setBusy(value) {
   busy = value;
   ["write", "refresh", "approve-draft", "approve-final", "save-notes", "save-draft"].forEach(id => { el(id).disabled = value; });
-  ["notes", "draft", "translation", "model", "translation-engine"].forEach(id => { el(id).disabled = value; });
+  ["notes", "draft", "translation", "model", "translation-engine", "writer-engine"].forEach(id => { el(id).disabled = value; });
   el("translate").disabled = value || !draftApproved;
   el("save").disabled = value || !finalApproved;
 }
 async function generate(task, text) {
-  const engine = task === "write" ? "ollama" : el("translation-engine").value;
+  const engine = task === "write" ? el("writer-engine").value : el("translation-engine").value;
   if (busy || !text.trim() || (engine === "ollama" && !el("model").value)) { status("Πρόσθεσε κείμενο και, για Ollama, επίλεξε μοντέλο."); return; }
   const target = task === "write" ? "draft" : "translation";
   if (el(target).value.trim() && !window.confirm("Υπάρχει ήδη κείμενο σε αυτό το πεδίο. Να αντικατασταθεί;")) return;
-  setBusy(true); status(engine === "argos" ? "Το Argos μεταφράζει τοπικά. Περίμενε…" : "Το τοπικό μοντέλο εργάζεται. Περίμενε…");
+  setBusy(true); status(engine === "nlg" ? "Οι τοπικοί κανόνες επεξεργάζονται τις σημειώσεις…" : engine === "argos" ? "Το Argos μεταφράζει τοπικά. Περίμενε…" : "Το τοπικό μοντέλο εργάζεται. Περίμενε…");
   try {
     const data = await api("/api/generate", {
       method: "POST", headers: {"Content-Type": "application/json", "X-Session-Token": token},
@@ -41,10 +41,16 @@ async function generate(task, text) {
     });
     if (task === "write") { el("draft").value = data.text; resetDraft(); }
     else { el("translation").value = data.text; translationValid = true; resetFinal(); }
-    dirty = true; status("Ολοκληρώθηκε. Έλεγξε το αποτέλεσμα.");
+    dirty = true; status(data.partial ? "Μερικό αποτέλεσμα: αμφίσημες ή μη ολοκληρωμένες σημειώσεις διατηρήθηκαν. Έλεγξέ τες πριν την έγκριση." : "Ολοκληρώθηκε. Έλεγξε το αποτέλεσμα.");
   } catch (err) { status(err.message + " Το κείμενό σου παραμένει διαθέσιμο."); }
   finally { setBusy(false); }
 }
+el("writer-engine").addEventListener("change", () => {
+  el("writer-engine-hint").textContent = el("writer-engine").value === "nlg"
+    ? "Περιορισμένοι τοπικοί κανόνες: ενώνουν bullets με τελική στίξη, χωρίς γραμματικό έλεγχο ή συμπλήρωση. Οι ελλιπείς σημειώσεις παραμένουν. Έλεγξε και επεξεργάσου το κείμενο."
+    : "Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες στην κορυφή.";
+  status("");
+});
 let argosPolling = false;
 async function refreshArgos() {
   try {
@@ -63,7 +69,7 @@ async function refreshArgos() {
 el("translation-engine").addEventListener("change", () => {
   const argos = el("translation-engine").value === "argos";
   el("argos-controls").hidden = !argos;
-  el("engine-hint").textContent = argos ? "Το Argos μεταφράζει χωρίς Ollama. Το μοντέλο στην κορυφή παραμένει διαθέσιμο για τον Writer." : "Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες στην κορυφή.";
+  el("engine-hint").textContent = argos ? "Το Argos μεταφράζει χωρίς Ollama. Το μοντέλο στην κορυφή παραμένει διαθέσιμο όταν επιλέγεις Ollama." : "Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες στην κορυφή.";
   if (argos) refreshArgos();
 });
 el("argos-refresh").addEventListener("click", refreshArgos);
