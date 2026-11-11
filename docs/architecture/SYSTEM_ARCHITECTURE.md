@@ -1,5 +1,7 @@
-# System architecture — planned logical boundaries
+# System architecture — prototype and planned boundaries
 
 The user interacts with a UI; application logic coordinates distinct Writer and Translator capabilities and human review. An owned integration boundary communicates with local Ollama. A separate import/export boundary, if implemented, acts only on user-authorized data and paths. These are responsibilities, not mandated processes, modules or a selected technology.
 
 The application owns source text and output lifecycle; the local provider receives only content required for the explicitly requested operation. Original and generated content remain distinct. Errors must not replace originals or trigger remote inference. Interfaces, error semantics, process/network binding and storage implementation require design and validation after decisions are approved. Domain logic must remain independent of presentation and provider implementation details. Owner for all project boundaries: project owner; implementation assignee pending.
+
+The owner selected a local browser interface. The prototype uses a minimal Python server bound to 127.0.0.1 on an OS-selected port, plus an owned Ollama adapter with a fixed local endpoint. It checks Host, Origin and a per-process token on generation requests, limits input and concurrent jobs, disables proxy use for Ollama and does not intentionally persist text. These are initial controls with focused tests, not a completed Shield assessment. A local address alone is not authentication. The AI Agents Lab's adapter was a reference; no code was copied from it.
