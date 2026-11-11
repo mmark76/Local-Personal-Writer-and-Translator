@@ -38,6 +38,11 @@
         <div class="panel-heading"><span class="panel-number">02</span><h2 id="draft-heading">Writer · Ελληνικό κείμενο</h2></div>
         <div class="panel-body">
           <div class="intro"><span class="eyebrow">ΔΗΜΙΟΥΡΓΙΑ &amp; ΕΛΕΓΧΟΣ</span><h3>Από τις ιδέες σε κείμενο</h3><p>Δημιούργησε ένα προσχέδιο και διαμόρφωσέ το όπως θέλεις.</p></div>
+          <div class="work-card engine-card">
+            <label for="writer-engine">Μηχανή συγγραφής</label>
+            <select id="writer-engine"><option value="ollama">Ollama (LLM)</option><option value="nlg">Offline NLG (Rules &amp; Templates)</option></select>
+            <p id="writer-engine-hint" class="card-hint">Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες στην κορυφή.</p>
+          </div>
           <div class="work-card draft-card">
             <div class="card-heading"><div><span class="card-kicker">ΠΡΟΣΧΕΔΙΟ</span><label for="draft">Ελληνικό κείμενο</label></div><span class="card-tag">Writer</span></div>
             <textarea id="draft" maxlength="40000" placeholder="Το ελληνικό προσχέδιο θα εμφανιστεί εδώ."></textarea>
