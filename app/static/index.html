@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local Writer &amp; Translator</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+  <script src="/models.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand"><span class="brand-name">Writer &amp; Translator</span><span class="badge">LOCAL</span><span class="brand-section">Workspace</span></div>
+      <div class="header-model">
+        <label for="model">Μοντέλο Writer / Ollama</label>
+        <select id="model"><option value="">Αναζήτηση μοντέλων…</option></select>
+        <button id="refresh" type="button" class="header-button">Ανανέωση</button>
+        <button id="manage-models" type="button" class="header-button">Διαχείριση μοντέλων</button>
+      </div>
+    </header>
+
+    <main class="workspace" aria-label="Χώρος εργασίας">
+      <section class="panel notes-panel" aria-labelledby="notes-heading">
+        <div class="panel-heading"><span class="panel-number">01</span><h2 id="notes-heading">Σημειώσεις</h2></div>
+        <div class="panel-body">
+          <div class="intro"><span class="eyebrow">Η ΑΦΕΤΗΡΙΑ ΣΟΥ</span><h3>Οι ιδέες σου</h3><p>Γράψε ή επικόλλησε ελληνικές σημειώσεις και bullet points.</p></div>
+          <div class="work-card notes-card">
+            <div class="card-heading"><div><span class="card-kicker">ΠΡΩΤΟΤΥΠΟ</span><label for="notes">Οι σημειώσεις σου</label></div><span class="card-tag">Ελληνικά</span></div>
+            <textarea id="notes" maxlength="40000" placeholder="• Πρώτη σκέψη&#10;• Δεύτερη σκέψη"></textarea>
+            <p class="card-hint">Οι σημειώσεις σου παραμένουν ξεχωριστές από το αποτέλεσμα.</p>
+          </div>
+          <div class="panel-actions"><button id="write" type="button" class="primary">Δημιουργία ελληνικού κειμένου <span aria-hidden="true">→</span></button><button id="save-notes" type="button" class="secondary">Αποθήκευση σημειώσεων</button></div>
+        </div>
+      </section>
+
+      <section class="panel draft-panel" aria-labelledby="draft-heading">
+        <div class="panel-heading"><span class="panel-number">02</span><h2 id="draft-heading">Writer · Ελληνικό κείμενο</h2></div>
+        <div class="panel-body">
+          <div class="intro"><span class="eyebrow">ΔΗΜΙΟΥΡΓΙΑ &amp; ΕΛΕΓΧΟΣ</span><h3>Από τις ιδέες σε κείμενο</h3><p>Δημιούργησε ένα προσχέδιο και διαμόρφωσέ το όπως θέλεις.</p></div>
+          <div class="work-card draft-card">
+            <div class="card-heading"><div><span class="card-kicker">ΠΡΟΣΧΕΔΙΟ</span><label for="draft">Ελληνικό κείμενο</label></div><span class="card-tag">Writer</span></div>
+            <textarea id="draft" maxlength="40000" placeholder="Το ελληνικό προσχέδιο θα εμφανιστεί εδώ."></textarea>
+            <p class="card-hint">Έλεγξε το νόημα και το προσωπικό σου ύφος πριν συνεχίσεις.</p>
+          </div>
+          <div class="panel-actions"><button id="approve-draft" type="button" class="secondary">Εγκρίνω το ελληνικό κείμενο</button><button id="translate" type="button" class="primary" disabled>Μετάφραση στα αγγλικά <span aria-hidden="true">→</span></button><button id="save-draft" type="button" class="secondary">Αποθήκευση προσχεδίου</button></div>
+          <p id="draft-status" class="stage-status">Το προσχέδιο χρειάζεται τον έλεγχό σου.</p>
+        </div>
+      </section>
+
+      <section class="panel translation-panel" aria-labelledby="translation-heading">
+        <div class="panel-heading"><span class="panel-number">03</span><h2 id="translation-heading">Translator · Μετάφραση</h2></div>
+        <div class="panel-body">
+          <div class="intro"><span class="eyebrow">ΜΕΤΑΦΡΑΣΗ &amp; ΕΓΚΡΙΣΗ</span><h3>Το κείμενό σου στα αγγλικά</h3><p>Έλεγξε τη μετάφραση και κράτησε το τελικό αποτέλεσμα.</p></div>
+          <div class="work-card engine-card">
+            <label for="translation-engine">Μηχανή μετάφρασης</label>
+            <select id="translation-engine"><option value="ollama">Ollama (LLM)</option><option value="argos">Argos Translate (Offline)</option></select>
+            <p id="engine-hint" class="card-hint">Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες στην κορυφή.</p>
+            <div id="argos-controls" hidden>
+              <p id="argos-status" role="status" aria-live="polite">Έλεγχος Argos…</p>
+              <button id="argos-refresh" type="button" class="secondary">Έλεγχος διαθεσιμότητας</button>
+              <button id="argos-install" type="button" class="secondary" hidden>Εγκατάσταση ελληνικά → αγγλικά</button>
+            </div>
+          </div>
+          <div class="work-card translation-card">
+            <div class="card-heading"><div><span class="card-kicker">ΜΕΤΑΦΡΑΣΗ</span><label for="translation">Αγγλικό κείμενο</label></div><span class="card-tag">English</span></div>
+            <textarea id="translation" maxlength="40000" placeholder="Η αγγλική μετάφραση θα εμφανιστεί εδώ."></textarea>
+            <p class="card-hint">Επιβεβαίωσε ότι το αποτέλεσμα διατηρεί το νόημά σου.</p>
+          </div>
+          <div class="panel-actions"><button id="approve-final" type="button" class="secondary">Εγκρίνω τη μετάφραση</button><button id="save" type="button" class="primary" disabled>Αποθήκευση σε TXT</button></div>
+          <p id="final-status" class="stage-status">Η μετάφραση χρειάζεται τον έλεγχό σου.</p>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer"><p>Τα κείμενά σου δεν αποθηκεύονται αυτόματα. Αποθήκευσέ τα πριν κλείσεις.</p><p id="status" role="status" aria-live="polite"></p><span>Τοπική λειτουργία · Ollama / Argos</span></footer>
+  </div>
+  <dialog id="models-dialog" aria-labelledby="models-title">
+    <div class="models-header">
+      <div><span class="card-kicker">OLLAMA · LOCAL</span><h2 id="models-title">Διαχείριση μοντέλων</h2></div>
+      <button id="models-close" type="button" class="header-button">Κλείσιμο</button>
+    </div>
+    <div class="models-content">
+      <section class="model-section">
+        <div class="models-section-heading"><div><h3>Εγκατεστημένα μοντέλα</h3><p>Τα τοπικά μοντέλα μπορεί να χρησιμοποιούνται και από άλλες εφαρμογές.</p></div>
+          <button id="models-refresh" type="button" class="secondary">Ανανέωση</button></div>
+        <ul id="models-list" class="models-list" aria-label="Εγκατεστημένα μοντέλα"></ul>
+      </section>
+      <section class="model-section">
+        <h3>Εύρεση και εγκατάσταση</h3>
+        <p>Βρες το ακριβές όνομα στην <a href="https://ollama.com/library" target="_blank" rel="noopener noreferrer">επίσημη βιβλιοθήκη Ollama</a> και πληκτρολόγησέ το παρακάτω.</p>
+        <p class="model-note">Η βιβλιοθήκη και η λήψη χρειάζονται σύνδεση στο διαδίκτυο και διαθέσιμο χώρο. Δεν ελέγχεται αυτόματα αν υπάρχει το όνομα.</p>
+        <label for="model-name">Όνομα μοντέλου</label>
+        <div class="model-install-row"><input id="model-name" type="text" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Όνομα από τη βιβλιοθήκη Ollama">
+          <button id="model-install" type="button" class="primary">Εγκατάσταση</button></div>
+      </section>
+      <section class="model-section" aria-labelledby="model-progress-title">
+        <h3 id="model-progress-title">Πρόοδος λήψης</h3>
+        <p id="model-job-status" role="status" aria-live="polite">Δεν υπάρχει ενεργή λήψη.</p>
+        <progress id="model-progress" max="100" hidden aria-label="Πρόοδος τρέχοντος αρχείου λήψης"></progress>
+        <p id="model-progress-detail" class="model-note"></p>
+      </section>
+      <p id="models-message" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+</body>
+</html>

@@ -8,7 +8,7 @@ The user's Global Codex Working Rules apply alongside the repository-specific in
 
 Before modification inspect repository instructions and Git state, fetch the relevant remote where available, and preserve all user work. Report unavailable remote verification and divergent or overlapping work; do not silently reconcile it.
 
-Keep changes small and coherent. R0 is documentation only; R1 requires separate authorization. Respect the logical UI, application, Writer, Translator, Ollama and import/export boundaries without creating speculative modules. Preserve originals separately from output and require human review and approval.
+Keep changes small and coherent. R0 is documentation only. The owner requested initial R1 implementation on 2026-11-11; release and unresolved readiness conditions are not thereby approved. Respect the logical UI, application, Writer, Translator, Ollama and import/export boundaries without creating speculative modules. Preserve originals separately from output and require human review and approval.
 
 Only local Ollama inference is initially approved; never add cloud inference, automatic remote fallback, unauthorized filesystem actions, or real personal text and secrets to the repository. Assess dependencies and installation needs before proposing them; no software or model installation or Windows configuration change is authorized by R0.
 
