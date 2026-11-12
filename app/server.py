@@ -119,8 +119,9 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.allowed_host() or self.headers.get("Origin") != origin
                 or not self.allowed_token()):
             return self.reject_post()
-        if self.path == "/api/shutdown":
+        if self.path in ("/api/shutdown", "/api/restart"):
             JOBS.cancel()
+            self.server.restart_requested = self.path == "/api/restart"
             self.respond(200, {"stopping": True})
             threading.Thread(target=self.server.shutdown, daemon=True).start()
             return
@@ -239,21 +240,28 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    with Server(("127.0.0.1", 0), Handler) as server:
-        print("WRITER & TRANSLATOR LOCAL SERVER", flush=True)
-        print("SERVER RUNNING", flush=True)
-        print(f"Local address: http://127.0.0.1:{server.server_port}/", flush=True)
-        print("\nIMPORTANT", flush=True)
-        print("This Terminal runs the Writer & Translator local server.", flush=True)
-        print("Closing it will stop the server and make the application unavailable.", flush=True)
-        print("Keep this Terminal running. You can minimize it, but do not close it.", flush=True)
-        print("Save your texts before stopping; unsaved text will be lost.", flush=True)
-        if "--open" in sys.argv[1:]:
-            webbrowser.open(f"http://127.0.0.1:{server.server_port}/")
-        try:
-            server.serve_forever()
-        except KeyboardInterrupt:
-            pass
+    open_browser = "--open" in sys.argv[1:]
+    while True:
+        with Server(("127.0.0.1", 0), Handler) as server:
+            server.restart_requested = False
+            print("WRITER & TRANSLATOR LOCAL SERVER", flush=True)
+            print("SERVER RUNNING", flush=True)
+            print(f"Local address: http://127.0.0.1:{server.server_port}/", flush=True)
+            print("\nIMPORTANT", flush=True)
+            print("This Terminal runs the Writer & Translator local server.", flush=True)
+            print("Closing it will stop the server and make the application unavailable.", flush=True)
+            print("Keep this Terminal running. You can minimize it, but do not close it.", flush=True)
+            print("Save your texts before stopping; unsaved text will be lost.", flush=True)
+            if open_browser:
+                webbrowser.open(f"http://127.0.0.1:{server.server_port}/")
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+        if not server.restart_requested:
+            break
+        print("\nRestarting Writer & Translator...", flush=True)
+        open_browser = True
 
 
 if __name__ == "__main__":

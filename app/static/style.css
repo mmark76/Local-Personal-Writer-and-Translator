@@ -18,7 +18,8 @@ button, select, textarea { font: inherit; }
 .brand-name { font-size: 1.14rem; font-weight: 800; letter-spacing: -.025em; color: #fff; white-space: nowrap; }
 .badge { padding: 7px 9px; background: #edede9; color: #181817; border-radius: 6px; font-size: .72rem; font-weight: 800; letter-spacing: .035em; }
 .brand-section { color: #bcbcb6; font-size: .9rem; font-weight: 700; }
-.header-model { justify-content: flex-end; flex-wrap: wrap; }
+.header-model { justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
+.app-header .header-button { border-color: transparent; padding: 9px 10px; }
 .header-model label { color: #c6c6c0; font-size: .83rem; font-weight: 700; white-space: nowrap; }
 select { min-width: 185px; max-width: 240px; padding: 9px 30px 9px 11px; border: 1px solid #4a4b46; border-radius: 7px; background: #252523; color: #f2f2ee; }
 button { border: 1px solid transparent; border-radius: 7px; padding: 10px 13px; font-weight: 700; cursor: pointer; line-height: 1.25; }
@@ -70,6 +71,8 @@ h3 { margin: 8px 0 5px; font-size: 1rem; }
 .card-tag { border: 1px solid #ffffff36; border-radius: 5px; padding: 4px 7px; color: #deded9; font-size: .7rem; white-space: nowrap; }
 textarea { width: 100%; flex: 1; min-height: 220px; resize: vertical; padding: 13px; border: 1px solid #ffffff31; border-radius: 7px; background: #171b1add; color: #f3f3ef; line-height: 1.6; }
 textarea::placeholder { color: #a7b2aa; opacity: 1; }
+.text-actions { display: flex; gap: 6px; margin-top: 8px; }
+.text-actions button { padding: 6px 10px; font-size: .8rem; }
 .card-hint { color: #c7d0ca; font-size: .78rem; line-height: 1.45; margin: 10px 0 0; }
 .panel-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
 .panel-actions button { text-align: left; }
@@ -116,6 +119,7 @@ textarea::placeholder { color: #a7b2aa; opacity: 1; }
 .light .notes-card { background: #e3f0e7; } .light .draft-card { background: #e5eef5; } .light .translation-card { background: #f0e8f5; }
 .light .card-heading label, .light .card-hint, .light .card-kicker, .light .card-tag { color: #343833; }
 .light .header-button, .light .secondary { background: #e0e0da; color: #20201e; border-color: #999; }
+.light .app-header .header-button { border-color: transparent; }
 .light dialog, .light .models-header { background: #f8f7f2; color: #20201e; }
 .light .model-section p, .light .model-row-info span, .light .model-note { color: #383832; }
 .light .model-row { background: #e3f0e7; }

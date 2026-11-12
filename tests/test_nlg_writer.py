@@ -13,6 +13,12 @@ import server
 
 
 class OfflineWriterTests(unittest.TestCase):
+    def test_academic_templates_preserve_unclear_fragments(self):
+        source = "• σκοπός εργασίας η εξέταση μιας πολιτικής\n• προσωπική εμπειρία\n• αξιολόγηση στο ερώτημα πόσο εξηγεί η θεωρία την επιλογή"
+        result = nlg_writer.generate(source)
+        self.assertEqual(result["text"], "Σκοπός της εργασίας είναι η εξέταση μιας πολιτικής.\n• προσωπική εμπειρία\nΑξιολογείται το ερώτημα: πόσο εξηγεί η θεωρία την επιλογή.")
+        self.assertTrue(result["partial"])
+
     def test_first_person_chronology_names_numbers_and_paragraphs(self):
         source = ("• Το 2020 εργάστηκα στην Αθήνα.\n• Το 2024 συνεργάστηκα με τη Μαρία Παπαδοπούλου.\n"
                   "• Η αμοιβή ήταν 1.500 ευρώ.\n\n• Στη συνέχεια μετακόμισα στην Κύπρο.")

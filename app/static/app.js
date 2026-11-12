@@ -28,6 +28,7 @@ function setBusy(value) {
   busy = value;
   ["write", "refresh", "approve-draft", "approve-final", "save-notes", "save-draft"].forEach(id => { el(id).disabled = value; });
   ["notes", "draft", "translation", "model", "translation-model", "translation-engine", "writer-engine", "translation-direction", "english-source", "approve-source"].forEach(id => { el(id).disabled = value; });
+  document.querySelectorAll(".text-actions button").forEach(button => { button.disabled = value; });
   el("translate").disabled = value || !(el("translation-direction").value === "en-el" ? reverseApproved : draftApproved);
   el("save").disabled = value || !finalApproved;
 }
@@ -78,7 +79,7 @@ async function generate(task, text) {
 el("writer-engine").addEventListener("change", () => {
   el("writer-model-wrap").hidden = el("writer-engine").value === "nlg";
   el("writer-engine-hint").textContent = el("writer-engine").value === "nlg"
-    ? "Περιορισμένοι τοπικοί κανόνες: ενώνουν bullets με τελική στίξη, χωρίς γραμματικό έλεγχο ή συμπλήρωση. Οι ελλιπείς σημειώσεις παραμένουν. Έλεγξε και επεξεργάσου το κείμενο."
+    ? "Περιορισμένοι τοπικοί κανόνες: αναγνωρίζουν ορισμένα πρότυπα και ενώνουν ολοκληρωμένα bullets, χωρίς γενική γραμματική σύνθεση. Οι αμφίσημες σημειώσεις παραμένουν. Έλεγξε και επεξεργάσου το κείμενο."
     : "Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες σε αυτή τη στήλη.";
   status("");
 });
@@ -144,6 +145,39 @@ el("stop-local").addEventListener("click", async () => {
     dirty = false;
     status("Η εφαρμογή τερματίστηκε. Κλείσε αυτή την καρτέλα.");
   } catch (err) { status(err.message); }
+});
+el("restart-local").addEventListener("click", async () => {
+  if (!window.confirm(window.translateUi("Να γίνει επανεκκίνηση; Αποθήκευσε πρώτα όσα κείμενα θέλεις να κρατήσεις."))) return;
+  try {
+    await api("/api/restart", {method: "POST", headers: {"X-Session-Token": token}});
+    dirty = false;
+    status("Η επανεκκίνηση ζητήθηκε. Έλεγξε τη νέα καρτέλα στον browser.");
+  } catch (err) { status(err.message); }
+});
+["notes", "draft", "english-source", "translation"].forEach(id => {
+  const field = el(id);
+  const fieldLabel = field.labels[0];
+  fieldLabel.id = `text-label-${id}`;
+  const actions = document.createElement("div");
+  actions.className = "text-actions";
+  const clear = document.createElement("button");
+  clear.type = "button"; clear.className = "secondary"; clear.textContent = "Καθαρισμός";
+  clear.id = `clear-${id}`;
+  clear.setAttribute("aria-labelledby", `${clear.id} ${fieldLabel.id}`);
+  clear.addEventListener("click", () => {
+    if (!field.value || !window.confirm(window.translateUi("Να καθαριστεί αυτό το πεδίο; Το κείμενό του θα διαγραφεί."))) return;
+    field.value = ""; field.dispatchEvent(new Event("input", {bubbles: true})); field.focus();
+  });
+  const copy = document.createElement("button");
+  copy.type = "button"; copy.className = "secondary"; copy.textContent = "Αντιγραφή";
+  copy.id = `copy-${id}`;
+  copy.setAttribute("aria-labelledby", `${copy.id} ${fieldLabel.id}`);
+  copy.addEventListener("click", async () => {
+    if (!field.value) return;
+    try { await navigator.clipboard.writeText(field.value); status("Το κείμενο αντιγράφηκε."); }
+    catch { status("Η αντιγραφή απέτυχε. Επίλεξε και αντέγραψε το κείμενο χειροκίνητα."); }
+  });
+  actions.append(clear, copy); field.insertAdjacentElement("afterend", actions);
 });
 let argosPolling = false;
 async function refreshArgos() {
