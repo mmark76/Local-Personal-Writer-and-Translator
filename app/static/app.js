@@ -193,10 +193,6 @@ el("translation-direction").addEventListener("change", () => {
   el("reverse-input").hidden = !reverse;
   el("argos-install").textContent = reverse ? "Εγκατάσταση αγγλικά → ελληνικά" : "Εγκατάσταση ελληνικά → αγγλικά";
   el("translate").textContent = reverse ? "Μετάφραση στα ελληνικά →" : "Μετάφραση στα αγγλικά →";
-  document.querySelector('label[for="translation"]').textContent = reverse ? "Ελληνικό κείμενο" : "Αγγλικό κείμενο";
-  el("translation-intro").textContent = reverse ? "Το κείμενό σου στα ελληνικά" : "Το κείμενό σου στα αγγλικά";
-  el("translation-language").textContent = reverse ? "Ελληνικά" : "English";
-  el("translation").placeholder = reverse ? "Η ελληνική μετάφραση θα εμφανιστεί εδώ." : "Η αγγλική μετάφραση θα εμφανιστεί εδώ.";
   el("translate").disabled = busy || !(reverse ? reverseApproved : draftApproved);
   translationValid = false; resetFinal();
   if (el("translation-engine").value === "argos") refreshArgos();
