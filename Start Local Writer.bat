@@ -7,6 +7,12 @@ if errorlevel 1 (
     exit /b 1
 )
 python app\server.py --open
+set "writer_exit_code=%errorlevel%"
 echo.
-echo Application stopped.
+if not "%writer_exit_code%"=="0" (
+    echo Writer ^& Translator stopped with an error. Review the message above.
+) else (
+    echo Writer ^& Translator has stopped. You can close this window.
+)
 pause
+exit /b %writer_exit_code%
