@@ -48,7 +48,7 @@ def local_models():
     return sorted(set(names))
 
 
-def generate(model, text, task):
+def generate(model, text, task, direction="el-en"):
     if model not in local_models():
         raise OllamaError("Το επιλεγμένο τοπικό μοντέλο δεν είναι διαθέσιμο.")
     info = _request("/api/show", {"model": model})
@@ -59,7 +59,10 @@ def generate(model, text, task):
                        "Διατήρησε νόημα και ύφος, μην επινοήσεις γεγονότα ή πηγές. "
                        "Επίστρεψε μόνο το κείμενο.")
     elif task == "translate":
-        instruction = ("Translate the Greek text into English. Preserve meaning, "
+        if direction not in ("el-en", "en-el"):
+            raise OllamaError("Μη έγκυρη κατεύθυνση μετάφρασης.")
+        languages = "Greek text into English" if direction == "el-en" else "English text into Greek"
+        instruction = (f"Translate the {languages}. Preserve meaning, "
                        "names, numbers, uncertainty and personal voice. "
                        "Do not add facts. Return only the translation.")
     else:

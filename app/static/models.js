@@ -7,7 +7,7 @@
   async function request(path, options = {}) {
     const response = await fetch(path, options);
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Η ενέργεια απέτυχε.");
+    if (!response.ok) throw new Error(window.translateUi(data.error || "Η ενέργεια απέτυχε."));
     return data;
   }
   function message(text) { get("models-message").textContent = text; }
@@ -37,7 +37,10 @@
       const remove = document.createElement("button");
       row.className = "model-row"; info.className = "model-row-info";
       name.textContent = model.name;
-      details.textContent = sizeLabel(model.size) + (get("model").value === model.name ? " · Επιλεγμένο" : "");
+      const uses = [];
+      if (get("model").value === model.name) uses.push("Writer");
+      if (get("translation-model").value === model.name) uses.push(window.uiIsEnglish() ? "Translator" : "Μετάφραση");
+      details.textContent = sizeLabel(model.size) + (uses.length ? " · " + uses.join(" / ") : "");
       remove.type = "button"; remove.className = "model-delete"; remove.textContent = "Διαγραφή";
       remove.setAttribute("aria-label", "Διαγραφή μοντέλου " + model.name);
       remove.addEventListener("click", () => deleteModel(model.name));
@@ -52,7 +55,7 @@
       get("model-job-status").textContent = "Δεν υπάρχει ενεργή λήψη.";
       bar.hidden = true; detail.textContent = "";
     } else {
-      get("model-job-status").textContent = (job.model ? job.model + " · " : "") + job.status;
+      get("model-job-status").textContent = (job.model ? job.model + " · " : "") + window.translateUi(job.status);
       bar.hidden = job.state !== "running";
       if (job.state === "running" && job.total > 0) {
         const percent = Math.max(0, Math.min(100, Math.floor(job.completed * 100 / job.total)));
@@ -80,7 +83,7 @@
       renderJob(job);
       if (job.state === "running") { timer = setTimeout(poll, 1000); return; }
       await loadModels(true);
-      message(job.status);
+      message(window.translateUi(job.status));
     } catch (error) {
       updateControls();
       message("Δεν ήταν δυνατή η ενημέρωση της λήψης. Ανανέωσε τη λίστα για να ελέγξεις την κατάσταση. " + error.message);
@@ -89,7 +92,7 @@
   async function installModel() {
     const model = get("model-name").value.trim();
     if (!model) { message("Πληκτρολόγησε το όνομα του μοντέλου."); return; }
-    if (!window.confirm("Να ληφθεί το «" + model + "» μέσω Ollama; Η λήψη χρησιμοποιεί διαδίκτυο και χώρο στον δίσκο.")) return;
+    if (!window.confirm(window.uiIsEnglish() ? `Download “${model}” via Ollama? This uses internet access and disk space.` : "Να ληφθεί το «" + model + "» μέσω Ollama; Η λήψη χρησιμοποιεί διαδίκτυο και χώρο στον δίσκο.")) return;
     operationBusy = true; updateControls(); message("");
     try {
       const job = await request("/api/model-install", {
@@ -103,9 +106,9 @@
     finally { operationBusy = false; updateControls(); }
   }
   async function deleteModel(model) {
-    const selected = get("model").value === model;
-    const warning = selected ? " Είναι το μοντέλο που έχεις επιλέξει." : "";
-    if (!window.confirm("Να διαγραφεί το «" + model + "» από το τοπικό Ollama; Δεν θα είναι διαθέσιμο ούτε σε άλλες εφαρμογές που το χρησιμοποιούν." + warning)) return;
+    const selected = get("model").value === model || get("translation-model").value === model;
+    const warning = selected ? (window.uiIsEnglish() ? " This is the selected model." : " Είναι το μοντέλο που έχεις επιλέξει.") : "";
+    if (!window.confirm((window.uiIsEnglish() ? `Delete “${model}” from local Ollama? It will also be unavailable to other applications that use it.` : "Να διαγραφεί το «" + model + "» από το τοπικό Ollama; Δεν θα είναι διαθέσιμο ούτε σε άλλες εφαρμογές που το χρησιμοποιούν.") + warning)) return;
     operationBusy = true; updateControls(); message("");
     try {
       await request("/api/model-delete", {
@@ -133,4 +136,5 @@
   });
   get("model-install").addEventListener("click", installModel);
   get("model").addEventListener("change", renderModels);
+  get("translation-model").addEventListener("change", renderModels);
 })();
