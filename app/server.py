@@ -240,8 +240,14 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     with Server(("127.0.0.1", 0), Handler) as server:
-        print(f"Open: http://127.0.0.1:{server.server_port}/", flush=True)
-        print("Press Ctrl+C to stop. Unsaved text will be lost.", flush=True)
+        print("WRITER & TRANSLATOR LOCAL SERVER", flush=True)
+        print("SERVER RUNNING", flush=True)
+        print(f"Local address: http://127.0.0.1:{server.server_port}/", flush=True)
+        print("\nIMPORTANT", flush=True)
+        print("This Terminal runs the Writer & Translator local server.", flush=True)
+        print("Closing it will stop the server and make the application unavailable.", flush=True)
+        print("Keep this Terminal running. You can minimize it, but do not close it.", flush=True)
+        print("Save your texts before stopping; unsaved text will be lost.", flush=True)
         if "--open" in sys.argv[1:]:
             webbrowser.open(f"http://127.0.0.1:{server.server_port}/")
         try:
