@@ -6,7 +6,7 @@ Project-specific governance, documentation, requirements, architecture, risks an
 
 ## R1 — prototype in development, NOT RELEASE READY
 
-The owner requested initial implementation on 2026-11-11. The first prototype covers Greek notes to draft, Greek to English translation, local model selection, review, approval and manual TXT export. English to Greek translation and broader functionality remain future scope. Development authorization does not authorize release or establish that readiness gates have passed.
+The owner requested initial implementation on 2026-11-11. The first prototype covers Greek notes to draft, Greek to English translation, local model selection, review, approval and manual TXT export. English to Greek translation is also being developed; broader functionality remains future scope. Development authorization does not authorize release or establish that readiness gates have passed.
 
 The project owner selected a local browser UI on 2026-11-10. The initial flow is Greek notes or bullet points → Greek draft → human review → English translation → final human approval. Implementation remains subject to testing and outstanding readiness review.
 

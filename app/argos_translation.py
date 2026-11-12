@@ -19,22 +19,24 @@ def _package():
         raise ArgosError("Το Argos δεν είναι διαθέσιμο στο Python της εφαρμογής. Έλεγξε την εγκατάσταση και τις εξαρτήσεις του.") from exc
 
 
-def available():
+def available(from_code="el", to_code="en"):
+    if (from_code, to_code) not in (("el", "en"), ("en", "el")):
+        return {"available": False, "installed": False}
     try:
-        pair = any(p.from_code == "el" and p.to_code == "en" for p in _package().get_installed_packages())
+        pair = any(p.from_code == from_code and p.to_code == to_code for p in _package().get_installed_packages())
         return {"available": True, "installed": pair}
     except Exception:
         return {"available": False, "installed": False}
 
 
-def translate(text):
+def translate(text, from_code="el", to_code="en"):
     if not isinstance(text, str) or not text.strip() or len(text) > 40000:
         raise ArgosError("Πρόσθεσε έγκυρο ελληνικό κείμενο.")
-    state = available()
+    state = available(from_code, to_code)
     if not state["available"]:
         raise ArgosError("Το Argos δεν είναι διαθέσιμο στο Python της εφαρμογής.")
     if not state["installed"]:
-        raise ArgosError("Το γλωσσικό πακέτο ελληνικά → αγγλικά δεν είναι εγκατεστημένο.")
+        raise ArgosError("Το γλωσσικό πακέτο για την επιλεγμένη κατεύθυνση δεν είναι εγκατεστημένο.")
     try:
         # Override provider and sentence splitting before importing translate: user
         # Argos settings must not switch this application to a remote provider.
@@ -43,9 +45,9 @@ def translate(text):
         settings.chunk_type = settings.ChunkType.STANZA
         import argostranslate.translate as argos
         argos.get_installed_languages.cache_clear()
-        translator = argos.get_translation_from_codes("el", "en")
+        translator = argos.get_translation_from_codes(from_code, to_code)
         if translator is None:
-            raise ArgosError("Δεν βρέθηκε το γλωσσικό ζεύγος ελληνικά → αγγλικά.")
+            raise ArgosError("Δεν βρέθηκε το επιλεγμένο γλωσσικό ζεύγος.")
         # Argos 1.11 packages can contain older Stanza resources incompatible
         # with current Stanza. Use a local sentence splitter; no downloads.
         underlying = getattr(translator, "underlying", translator)
@@ -77,34 +79,36 @@ class PackageManager:
         with self._lock:
             self._job = {"state": state, "status": status}
 
-    def start(self):
+    def start(self, from_code="el", to_code="en"):
+        if (from_code, to_code) not in (("el", "en"), ("en", "el")):
+            raise ArgosError("Μη έγκυρη κατεύθυνση μετάφρασης.")
         if not self._busy.acquire(blocking=False):
             raise ArgosBusy("Μια εργασία βρίσκεται ήδη σε εξέλιξη.")
         try:
-            state = available()
+            state = available(from_code, to_code)
             if not state["available"]:
                 raise ArgosError("Το Argos δεν είναι διαθέσιμο στο Python της εφαρμογής.")
             if state["installed"]:
                 raise ArgosError("Το γλωσσικό πακέτο είναι ήδη εγκατεστημένο.")
             self._update("running", "Αναζήτηση του γλωσσικού πακέτου…")
-            threading.Thread(target=self._install, daemon=True).start()
+            threading.Thread(target=self._install, args=(from_code, to_code), daemon=True).start()
             return self.status()
         except Exception:
             self._busy.release()
             raise
 
-    def _install(self):
+    def _install(self, from_code="el", to_code="en"):
         try:
             package = _package()
             package.update_package_index()
-            candidate = next((p for p in package.get_available_packages() if p.from_code == "el" and p.to_code == "en"), None)
+            candidate = next((p for p in package.get_available_packages() if p.from_code == from_code and p.to_code == to_code), None)
             if candidate is None:
-                raise ArgosError("Δεν βρέθηκε το πακέτο ελληνικά → αγγλικά στον κατάλογο Argos.")
+                raise ArgosError("Δεν βρέθηκε το επιλεγμένο γλωσσικό πακέτο στον κατάλογο Argos.")
             self._update("running", "Λήψη του γλωσσικού πακέτου…")
             path = candidate.download()
             self._update("running", "Εγκατάσταση του γλωσσικού πακέτου…")
             package.install_from_path(path)
-            if not available()["installed"]:
+            if not available(from_code, to_code)["installed"]:
                 raise ArgosError("Η εγκατάσταση δεν επιβεβαιώθηκε. Έλεγξε το πακέτο Argos.")
             self._update("completed", "Το γλωσσικό πακέτο εγκαταστάθηκε.")
         except ArgosError as exc:

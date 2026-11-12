@@ -7,20 +7,24 @@ import sys
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlsplit
 
 import ollama
 import model_manager
 import argos_translation
 import nlg_writer
+import generation_jobs
 
 STATIC = Path(__file__).resolve().parent / "static"
 TOKEN = secrets.token_urlsafe(32)
 BUSY = threading.Lock()
 MODELS = model_manager.ModelManager(BUSY)
 ARGOS = argos_translation.PackageManager(BUSY)
+JOBS = generation_jobs.GenerationJobs(BUSY)
 MAX_INPUT = 40_000
 FILES = {"/": ("index.html", "text/html; charset=utf-8"),
          "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+         "/i18n.js": ("i18n.js", "text/javascript; charset=utf-8"),
          "/models.js": ("models.js", "text/javascript; charset=utf-8"),
          "/style.css": ("style.css", "text/css; charset=utf-8")}
 
@@ -95,8 +99,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.respond(200, {"models": model_manager.installed_models(), "job": MODELS.status()})
             except (ollama.OllamaError, model_manager.ModelError) as exc:
                 return self.respond(503, {"error": str(exc), "job": MODELS.status()})
-        if self.path == "/api/argos-status":
-            return self.respond(200, {**argos_translation.available(), "job": ARGOS.status()})
+        if self.path in ("/api/argos-status", "/api/argos-status?direction=en-el"):
+            codes = ("en", "el") if self.path.endswith("direction=en-el") else ("el", "en")
+            return self.respond(200, {**argos_translation.available(*codes), "job": ARGOS.status()})
+        if urlsplit(self.path).path == "/api/generation-status":
+            if not self.allowed_token():
+                return self.respond(403, {"error": "Η αίτηση δεν επιτρέπεται."})
+            job_id = parse_qs(urlsplit(self.path).query).get("id", [""])[0]
+            job = JOBS.status(job_id) if job_id else None
+            return self.respond(200, job) if job else self.respond(404, {"error": "Δεν βρέθηκε."})
         if self.path == "/api/model-job":
             if not self.allowed_token():
                 return self.respond(403, {"error": "Η αίτηση δεν επιτρέπεται."})
@@ -108,11 +119,29 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.allowed_host() or self.headers.get("Origin") != origin
                 or not self.allowed_token()):
             return self.reject_post()
+        if self.path == "/api/shutdown":
+            JOBS.cancel()
+            self.respond(200, {"stopping": True})
+            threading.Thread(target=self.server.shutdown, daemon=True).start()
+            return
+        if self.path == "/api/generation-cancel":
+            if self.headers.get_content_type() != "application/json":
+                return self.respond(415, {"error": "Μη έγκυρη αίτηση."})
+            try:
+                size = int(self.headers.get("Content-Length", "0"))
+                if not 0 < size <= 1024:
+                    raise ValueError()
+                body = json.loads(self.rfile.read(size).decode("utf-8"))
+                if not isinstance(body, dict) or not isinstance(body.get("id"), str):
+                    raise ValueError()
+            except (ValueError, UnicodeDecodeError):
+                return self.respond(400, {"error": "Μη έγκυρη αίτηση."})
+            return self.respond(200, {"cancelled": JOBS.cancel(body["id"])})
         if self.path == "/api/argos-install":
             return self.argos_install()
         if self.path in ("/api/model-install", "/api/model-delete"):
             return self.model_operation()
-        if self.path != "/api/generate":
+        if self.path not in ("/api/generate", "/api/generation-start"):
             return self.respond(404, {"error": "Δεν βρέθηκε."})
         if self.headers.get_content_type() != "application/json":
             return self.respond(415, {"error": "Μη έγκυρη αίτηση."})
@@ -125,20 +154,34 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError()
             text, model, task = request.get("text"), request.get("model"), request.get("task")
             engine = request.get("engine", "ollama")
+            direction = request.get("direction", "el-en")
             if (not isinstance(text, str) or not text.strip() or len(text) > MAX_INPUT
                     or task not in ("write", "translate")
                     or (task == "write" and engine not in ("ollama", "nlg"))
                     or (task == "translate" and engine not in ("ollama", "argos"))
+                    or direction not in ("el-en", "en-el")
                     or (engine == "ollama" and not isinstance(model, str))):
                 raise ValueError()
         except (ValueError, UnicodeDecodeError):
             return self.respond(400, {"error": "Ελέγξτε το κείμενο και το μοντέλο."})
         if engine == "nlg":
             return self.respond(200, nlg_writer.generate(text))
+        if self.path == "/api/generation-start":
+            try:
+                return self.respond(202, JOBS.start(task, engine, model, text, direction))
+            except generation_jobs.GenerationBusy:
+                return self.respond(409, {"error": "Μια εργασία βρίσκεται ήδη σε εξέλιξη."})
+            except Exception:
+                return self.respond(503, {"error": "Δεν ήταν δυνατή η έναρξη της εργασίας."})
         if not BUSY.acquire(blocking=False):
             return self.respond(409, {"error": "Μια εργασία βρίσκεται ήδη σε εξέλιξη."})
         try:
-            result = argos_translation.translate(text) if engine == "argos" else ollama.generate(model, text, task)
+            if engine == "argos":
+                result = (argos_translation.translate(text, "en", "el") if direction == "en-el"
+                          else argos_translation.translate(text))
+            else:
+                result = (ollama.generate(model, text, task, "en-el") if task == "translate" and direction == "en-el"
+                          else ollama.generate(model, text, task))
             return self.respond(200, {"text": result})
         except (ollama.OllamaError, argos_translation.ArgosError) as exc:
             return self.respond(503, {"error": str(exc)})
@@ -158,7 +201,10 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, UnicodeDecodeError):
             return self.respond(400, {"error": "Απαιτείται επιβεβαίωση εγκατάστασης."})
         try:
-            return self.respond(202, ARGOS.start())
+            direction = request.get("direction", "el-en")
+            if direction not in ("el-en", "en-el"):
+                return self.respond(400, {"error": "Μη έγκυρη κατεύθυνση μετάφρασης."})
+            return self.respond(202, ARGOS.start("en", "el") if direction == "en-el" else ARGOS.start())
         except argos_translation.ArgosBusy as exc:
             return self.respond(409, {"error": str(exc)})
         except argos_translation.ArgosError as exc:
