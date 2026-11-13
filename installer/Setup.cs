@@ -16,7 +16,7 @@ internal static class Setup
     }
 
     [STAThread]
-    private static int Main()
+    private static int Main(string[] args)
     {
         string directory = Path.Combine(Path.GetTempPath(), "WriterSetup-" + Guid.NewGuid().ToString("N"));
         string script = Path.Combine(directory, "Install-Writer.ps1");
@@ -29,9 +29,24 @@ internal static class Setup
             ProcessStartInfo start = new ProcessStartInfo();
             start.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe");
             start.Arguments = "-NoProfile -ExecutionPolicy Bypass -File \"" + script + "\"";
+            bool verify = args.Length == 2 && args[0] == "--verify-dir";
+            if (args.Length > 0 && !verify) throw new ArgumentException("Unsupported setup option.");
+            if (verify)
+            {
+                if (!Path.IsPathRooted(args[1]) || args[1].Contains("\"")) throw new ArgumentException("Invalid verification directory.");
+                start.Arguments += " -VerifyDestination \"" + args[1] + "\"";
+            }
             start.UseShellExecute = false;
             start.CreateNoWindow = true;
-            using (Process process = Process.Start(start)) { process.WaitForExit(); return process.ExitCode; }
+            start.RedirectStandardError = true;
+            using (Process process = Process.Start(start))
+            {
+                string error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                if (process.ExitCode != 0 && !verify) MessageBox.Show("Setup could not start: " + error, "Writer & Translator Setup", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (process.ExitCode != 0 && verify) Console.Error.WriteLine(error);
+                return process.ExitCode;
+            }
         }
         catch (Exception error)
         {
