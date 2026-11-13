@@ -10,7 +10,7 @@ Engineering Standards defines required outcomes, Framework/DNA the delivery appr
 
 ## Try the development prototype
 
-The Windows setup wizard creates a new `Writer-Translator` folder in a location you choose and refuses to overwrite an existing folder. It provides optional links and instructions for Python, Ollama and Argos; it does not install those dependencies or download models automatically. The installer is unsigned and Windows may display a warning. To build the installer from a reviewed commit on Windows, run `installer/Build-Installer.ps1` with `-SourceRef` and an existing `-OutputDirectory`; the package is built with Windows IExpress and includes only the application payload.
+The Windows setup wizard creates a new `Writer-Translator` folder in a location you choose and refuses to overwrite an existing folder. It provides optional links and instructions for Python, Ollama and Argos; it does not install those dependencies or download models automatically. The installer is unsigned and Windows may display a warning. To build the installer from a reviewed commit on Windows, run `installer/Build-Installer.ps1` with `-SourceRef` and an existing `-OutputDirectory`; the package uses the .NET Framework compiler included in Windows and contains only the application payload.
 
 Requires an existing Python 3 installation. Ollama with at least one local model is required for the Ollama engines; the Offline NLG Writer does not require Ollama. Double-click `Start Local Writer.bat` to open the application. Alternatively, from the repository root run:
 
