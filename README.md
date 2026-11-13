@@ -10,6 +10,8 @@ Engineering Standards defines required outcomes, Framework/DNA the delivery appr
 
 ## Try the development prototype
 
+The Windows setup wizard creates a new `Writer-Translator` folder in a location you choose and refuses to overwrite an existing folder. It provides optional links and instructions for Python, Ollama and Argos; it does not install those dependencies or download models automatically. The installer is unsigned and Windows may display a warning. To build the installer from a reviewed commit on Windows, run `installer/Build-Installer.ps1` with `-SourceRef` and an existing `-OutputDirectory`; the package uses the .NET Framework compiler included in Windows and contains only the application payload.
+
 Requires an existing Python 3 installation. Ollama with at least one local model is required for the Ollama engines; the Offline NLG Writer does not require Ollama. Double-click `Start Local Writer.bat` to open the application. Alternatively, from the repository root run:
 
 ```text
@@ -42,7 +44,7 @@ Verification on 2026-11-11: 38 Python tests passed on Windows, including mocked 
 
 ### Workspace controls and bidirectional translation
 
-The header offers Greek/English interface text, light/dark appearance, settings, help, information and a confirmed Stop Application control. Language and theme preferences are stored for the current loopback origin; because the server uses a new port when restarted, they may need to be selected again. Text is not stored in those preferences. Each column can be hidden and reopened. Drag the divider above each Writer or Translator text area, or use its arrow keys, to adjust the options panel height. The Writer and Translator have separate Ollama model selectors.
+The interface defaults to English and dark mode. On startup, Writer selects an installed `gemma4:e4b` or `gemma4:latest` when available; otherwise choose a model. Translation defaults to Argos, which requires its Python dependency and the relevant language package. No model or package is installed automatically. The header offers Greek/English interface text, light/dark appearance, settings, help, information and a confirmed Stop Application control. Language and theme preferences are stored for the current loopback origin; because the server uses a new port when restarted, they may need to be selected again. Text is not stored in those preferences. Each column can be hidden and reopened. Drag the divider above each Writer or Translator text area, or use its arrow keys, to adjust the options panel height. The Writer and Translator have separate Ollama model selectors.
 
 The Translator supports Greek → English and English → Greek. For English → Greek enter and approve an English source in the translation panel. Argos needs the corresponding installed language pair for each direction; installing a missing pair is explicit and requires internet access. Stop task terminates this application's isolated generation worker and preserves the source. An Ollama server may continue work briefly after its client disconnects. No result from a cancelled task is approved or saved automatically.
 

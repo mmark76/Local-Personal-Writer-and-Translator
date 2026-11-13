@@ -19,7 +19,8 @@ button, select, textarea { font: inherit; }
 .badge { padding: 7px 9px; background: #edede9; color: #181817; border-radius: 6px; font-size: .72rem; font-weight: 800; letter-spacing: .035em; }
 .brand-section { color: #bcbcb6; font-size: .9rem; font-weight: 700; }
 .header-model { justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
-.app-header .header-button { border-color: transparent; padding: 9px 10px; }
+.app-header .header-button { background: transparent; border-color: transparent; padding: 9px 10px; }
+.app-header .header-button:hover:not(:disabled), .app-header .header-button[aria-pressed="true"] { background: #30302d; }
 .header-model label { color: #c6c6c0; font-size: .83rem; font-weight: 700; white-space: nowrap; }
 select { min-width: 185px; max-width: 240px; padding: 9px 30px 9px 11px; border: 1px solid #4a4b46; border-radius: 7px; background: #252523; color: #f2f2ee; }
 button { border: 1px solid transparent; border-radius: 7px; padding: 10px 13px; font-weight: 700; cursor: pointer; line-height: 1.25; }
@@ -119,7 +120,8 @@ textarea::placeholder { color: #a7b2aa; opacity: 1; }
 .light .notes-card { background: #e3f0e7; } .light .draft-card { background: #e5eef5; } .light .translation-card { background: #f0e8f5; }
 .light .card-heading label, .light .card-hint, .light .card-kicker, .light .card-tag { color: #343833; }
 .light .header-button, .light .secondary { background: #e0e0da; color: #20201e; border-color: #999; }
-.light .app-header .header-button { border-color: transparent; }
+.light .app-header .header-button { background: transparent; border-color: transparent; }
+.light .app-header .header-button:hover:not(:disabled), .light .app-header .header-button[aria-pressed="true"] { background: #d5d5cd; }
 .light dialog, .light .models-header { background: #f8f7f2; color: #20201e; }
 .light .model-section p, .light .model-row-info span, .light .model-note { color: #383832; }
 .light .model-row { background: #e3f0e7; }
@@ -129,6 +131,10 @@ textarea::placeholder { color: #a7b2aa; opacity: 1; }
 .light #status:not(:empty) { color: #704d0b; }
 
 .engine-card { flex: 0 0 auto; min-height: 0; gap: 8px; }
+.engine-card details { font-size: .8rem; line-height: 1.45; }
+.engine-card summary { cursor: pointer; }
+.engine-card a { color: #f2c982; }
+.light .engine-card a { color: #704d0b; }
 #reverse-input:not([hidden]) { display: flex; flex-direction: column; gap: 8px; }
 #english-source { min-height: 120px; }
 

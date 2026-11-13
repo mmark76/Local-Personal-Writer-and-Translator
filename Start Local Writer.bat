@@ -3,6 +3,8 @@ cd /d "%~dp0"
 python --version >nul 2>&1
 if errorlevel 1 (
     echo Python was not found. Install it only if you choose to do so.
+    echo Official Python download: https://www.python.org/downloads/
+    echo After installing Python, open this launcher again.
     pause
     exit /b 1
 )
