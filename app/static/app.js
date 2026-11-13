@@ -1,6 +1,6 @@
 "use strict";
 const el = id => document.getElementById(id);
-let token = "", busy = false, draftApproved = false, finalApproved = false, translationValid = false, reverseApproved = false, dirty = false;
+let token = "", busy = false, draftApproved = false, finalApproved = false, translationValid = false, reverseApproved = false, dirty = false, initialModelPending = true;
 const status = message => { el("status").textContent = message; };
 
 async function api(path, options) {
@@ -18,8 +18,13 @@ async function refreshModels() {
       select.replaceChildren(new Option("Επίλεξε μοντέλο", ""));
       data.models.forEach(model => select.add(new Option(model, model)));
       if (data.models.includes(previous[index])) select.value = previous[index];
+      else if (index === 0 && initialModelPending) {
+        const preferred = ["gemma4:e4b", "gemma4:latest"].find(name => data.models.includes(name));
+        if (preferred) select.value = preferred;
+      }
     });
-    status(data.models.length ? "Επίλεξε ένα εγκατεστημένο τοπικό μοντέλο." : "Δεν βρέθηκαν τοπικά μοντέλα Ollama.");
+    initialModelPending = false;
+    status(!data.models.length ? "Δεν βρέθηκαν τοπικά μοντέλα Ollama." : el("model").value ? "Επιλέχθηκε το τοπικό μοντέλο Writer." : "Επίλεξε ένα εγκατεστημένο τοπικό μοντέλο.");
   } catch (err) { status(err.message); }
 }
 function resetFinal() { finalApproved = false; el("save").disabled = true; el("final-status").textContent = "Η μετάφραση χρειάζεται τον έλεγχό σου."; }
@@ -202,6 +207,7 @@ el("translation-engine").addEventListener("change", () => {
   el("engine-hint").textContent = argos ? "Το Argos μεταφράζει χωρίς μοντέλο Ollama." : "Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες σε αυτή τη στήλη.";
   if (argos) refreshArgos();
 });
+el("translation-engine").dispatchEvent(new Event("change"));
 el("argos-refresh").addEventListener("click", refreshArgos);
 el("argos-install").addEventListener("click", async () => {
   if (!window.confirm(window.translateUi("Να γίνει λήψη και εγκατάσταση του επιλεγμένου γλωσσικού πακέτου Argos; Χρειάζεται σύνδεση και χώρος. Το πακέτο μπορεί να χρησιμοποιείται και από άλλες εφαρμογές."))) return;

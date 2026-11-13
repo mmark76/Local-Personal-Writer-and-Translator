@@ -49,6 +49,7 @@
             <select id="writer-engine"><option value="ollama">Ollama (LLM)</option><option value="nlg">Offline NLG (Rules &amp; Templates)</option></select>
             <div id="writer-model-wrap"><label for="model">Μοντέλο Writer / Ollama</label> <select id="model"><option value="">Αναζήτηση μοντέλων…</option></select></div>
             <p id="writer-engine-hint" class="card-hint">Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες σε αυτή τη στήλη.</p>
+            <details><summary>Οδηγίες εγκατάστασης Ollama και μοντέλου</summary><p>Για συγγραφή με μοντέλο χρειάζεται να εγκαταστήσεις και να ξεκινήσεις το Ollama. Έπειτα άνοιξε τη Διαχείριση μοντέλων, πληκτρολόγησε gemma4:e4b και επιβεβαίωσε τη λήψη. Η λήψη χρειάζεται σύνδεση και χώρο.</p><a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">Επίσημη λήψη Ollama</a></details>
           </div>
           <div class="height-divider" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="Αλλαγή ύψους επιλογών Writer" aria-valuemin="90" aria-valuemax="600" aria-valuenow="150"></div>
           <div class="work-card draft-card">
@@ -70,11 +71,12 @@
             <select id="translation-direction"><option value="el-en">Ελληνικά → Αγγλικά</option><option value="en-el">Αγγλικά → Ελληνικά</option></select>
             <div id="reverse-input" hidden><label for="english-source">Αγγλικό κείμενο προς μετάφραση</label><textarea id="english-source" maxlength="40000" placeholder="Γράψε ή επικόλλησε το αγγλικό κείμενο."></textarea><button id="approve-source" type="button" class="secondary">Εγκρίνω το αγγλικό κείμενο</button><p id="source-status" class="stage-status">Το αγγλικό κείμενο χρειάζεται τον έλεγχό σου.</p></div>
             <label for="translation-engine">Μηχανή μετάφρασης</label>
-            <select id="translation-engine"><option value="ollama">Ollama (LLM)</option><option value="argos">Argos Translate (Offline)</option></select>
+            <select id="translation-engine"><option value="ollama">Ollama (LLM)</option><option value="argos" selected>Argos Translate (Offline)</option></select>
             <div id="translation-model-wrap"><label for="translation-model">Μοντέλο μετάφρασης / Ollama</label> <select id="translation-model"><option value="">Αναζήτηση μοντέλων…</option></select></div>
             <p id="engine-hint" class="card-hint">Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες σε αυτή τη στήλη.</p>
             <div id="argos-controls" hidden>
               <p id="argos-status" role="status" aria-live="polite">Έλεγχος Argos…</p>
+              <details><summary>Οδηγίες εγκατάστασης Argos</summary><p>Αν λείπει η βιβλιοθήκη Argos, άνοιξε τερματικό στον φάκελο της εφαρμογής και εκτέλεσε την εντολή που ακολουθεί. Έπειτα επανεκκίνησε την εφαρμογή και επίλεξε εγκατάσταση γλωσσικού πακέτου, αν ζητηθεί. Οι εγκαταστάσεις απαιτούν σύνδεση και τη δική σου ενέργεια.</p><code>python -m pip install -r requirements-argos.txt</code></details>
               <button id="argos-refresh" type="button" class="secondary">Έλεγχος διαθεσιμότητας</button>
               <button id="argos-install" type="button" class="secondary" hidden>Εγκατάσταση ελληνικά → αγγλικά</button>
             </div>
