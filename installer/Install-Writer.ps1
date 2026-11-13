@@ -1,4 +1,4 @@
-param([string]$VerifyDestination)
+param([string]$VerifyDestination, [switch]$VerifyUi)
 $ErrorActionPreference = 'Stop'
 $payload = Join-Path $PSScriptRoot 'payload.zip'
 
@@ -112,5 +112,10 @@ $cancel.Text = 'Cancel'; $cancel.SetBounds(475, 395, 100, 34)
 $cancel.Add_Click({ $form.Close() })
 $form.Controls.Add($cancel)
 $form.AcceptButton = $install; $form.CancelButton = $cancel
+if ($VerifyUi) {
+    if ($form.Controls.Count -lt 8 -or $install.Text -ne 'Install' -or $cancel.Text -ne 'Cancel') { throw 'Installer UI validation failed.' }
+    $form.Dispose()
+    exit 0
+}
 [void]$form.ShowDialog()
 $form.Dispose()

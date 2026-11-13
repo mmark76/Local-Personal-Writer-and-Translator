@@ -29,13 +29,16 @@ internal static class Setup
             ProcessStartInfo start = new ProcessStartInfo();
             start.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe");
             start.Arguments = "-NoProfile -ExecutionPolicy Bypass -File \"" + script + "\"";
-            bool verify = args.Length == 2 && args[0] == "--verify-dir";
+            bool verifyDirectory = args.Length == 2 && args[0] == "--verify-dir";
+            bool verifyUi = args.Length == 1 && args[0] == "--verify-ui";
+            bool verify = verifyDirectory || verifyUi;
             if (args.Length > 0 && !verify) throw new ArgumentException("Unsupported setup option.");
-            if (verify)
+            if (verifyDirectory)
             {
                 if (!Path.IsPathRooted(args[1]) || args[1].Contains("\"")) throw new ArgumentException("Invalid verification directory.");
                 start.Arguments += " -VerifyDestination \"" + args[1] + "\"";
             }
+            if (verifyUi) start.Arguments += " -VerifyUi";
             start.UseShellExecute = false;
             start.CreateNoWindow = true;
             start.RedirectStandardError = true;
