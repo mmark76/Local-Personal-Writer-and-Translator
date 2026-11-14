@@ -30,13 +30,14 @@
       <section class="panel notes-panel" aria-labelledby="notes-heading">
         <div class="panel-heading"><button type="button" class="panel-toggle" data-panel="notes" aria-expanded="true" aria-controls="notes-body" title="Απόκρυψη στήλης" aria-label="Απόκρυψη στήλης">◧</button><span class="panel-number">01</span><h2 id="notes-heading">Σημειώσεις</h2></div>
         <div class="panel-body" id="notes-body">
-          <div class="intro"><span class="eyebrow">Η ΑΦΕΤΗΡΙΑ ΣΟΥ</span><h3>Οι ιδέες σου</h3><p>Γράψε ή επικόλλησε ελληνικές σημειώσεις και bullet points.</p></div>
+          <div class="intro"><span class="eyebrow">Η ΑΦΕΤΗΡΙΑ ΣΟΥ</span><h3>Οι ιδέες σου</h3><p>Γράψε ή επικόλλησε σημειώσεις και bullet points.</p></div>
           <div class="work-card notes-card">
-            <div class="card-heading"><div><span class="card-kicker">ΠΡΩΤΟΤΥΠΟ</span><label for="notes">Οι σημειώσεις σου</label></div><span class="card-tag">Ελληνικά</span></div>
+            <div class="card-heading"><div><span class="card-kicker">ΠΡΩΤΟΤΥΠΟ</span><label for="notes">Οι σημειώσεις σου</label></div></div>
+            <label for="source-language">Γλώσσα σημειώσεων</label><select id="source-language"><option value="el">Ελληνικά</option><option value="en">Αγγλικά</option></select>
             <textarea id="notes" maxlength="40000" placeholder="Γράψε τις σημειώσεις σου"></textarea>
             <p class="card-hint">Οι σημειώσεις σου παραμένουν ξεχωριστές από το αποτέλεσμα.</p>
           </div>
-          <div class="panel-actions"><button id="write" type="button" class="primary">Δημιουργία ελληνικού κειμένου <span aria-hidden="true">→</span></button><button id="save-notes" type="button" class="secondary">Αποθήκευση σημειώσεων</button></div>
+          <div class="panel-actions"><button id="write" type="button" class="primary">Δημιουργία κειμένου <span aria-hidden="true">→</span></button><button id="save-notes" type="button" class="secondary">Αποθήκευση σημειώσεων</button></div>
         </div>
       </section>
 
@@ -45,6 +46,7 @@
         <div class="panel-body" id="draft-body">
           <div class="intro"><span class="eyebrow">ΔΗΜΙΟΥΡΓΙΑ &amp; ΕΛΕΓΧΟΣ</span><h3>Από τις ιδέες σε κείμενο</h3><p>Δημιούργησε ένα προσχέδιο και διαμόρφωσέ το όπως θέλεις.</p></div>
           <div class="work-card engine-card">
+            <label for="output-language">Γλώσσα κειμένου</label><select id="output-language"><option value="el">Ελληνικά</option><option value="en">Αγγλικά</option></select>
             <label for="writer-engine">Μηχανή συγγραφής</label>
             <select id="writer-engine"><option value="ollama">Ollama (LLM)</option><option value="nlg">Offline NLG (Rules &amp; Templates)</option></select>
             <div id="writer-model-wrap"><label for="model">Μοντέλο Writer / Ollama</label> <select id="model"><option value="">Αναζήτηση μοντέλων…</option></select></div>
@@ -95,7 +97,7 @@
     <footer class="app-footer"><p>Τα κείμενά σου δεν αποθηκεύονται αυτόματα. Αποθήκευσέ τα πριν κλείσεις.</p><p id="status" role="status" aria-live="polite"></p><button id="stop-generation" type="button" class="header-button" hidden>Stop εργασίας</button><span>Τοπική λειτουργία · Ollama / Argos</span><span>© 2026 Markellos Markides</span><span>Development build</span></footer>
   </div>
   <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="models-header"><h2 id="settings-title">Ρυθμίσεις</h2><button id="settings-close" type="button" class="header-button">Κλείσιμο</button></div><div class="models-content"><p>Αλλαγή γλώσσας και εμφάνισης από τα κουμπιά στο επάνω μέρος της εφαρμογής.</p><p>Οι προτιμήσεις διατηρούνται στον browser για την τρέχουσα τοπική διεύθυνση. Τα κείμενα δεν αποθηκεύονται αυτόματα.</p></div></dialog>
-  <dialog id="help-dialog" aria-labelledby="help-title"><div class="models-header"><h2 id="help-title">Βοήθεια</h2><button id="help-close" type="button" class="header-button">Κλείσιμο</button></div><div class="models-content"><p>Πρόσθεσε σημειώσεις, δημιούργησε και έλεγξε το ελληνικό κείμενο. Για αγγλικά προς ελληνικά επίλεξε την κατεύθυνση και πρόσθεσε αγγλικό κείμενο. Έγκρινε το πρωτότυπο πριν από τη μετάφραση και έλεγξε το αποτέλεσμα πριν την αποθήκευση.</p><p>Αποθήκευσε τα κείμενά σου πριν κλείσεις την εφαρμογή. Τα κείμενα δεν αποθηκεύονται αυτόματα.</p></div></dialog>
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="models-header"><h2 id="help-title">Βοήθεια</h2><button id="help-close" type="button" class="header-button">Κλείσιμο</button></div><div class="models-content"><p>Επίλεξε χωριστά τη γλώσσα σημειώσεων και κειμένου. Έλεγξε το κείμενο που δημιουργήθηκε. Για αγγλικά προς ελληνικά επίλεξε την κατεύθυνση και πρόσθεσε αγγλικό κείμενο στο πεδίο μετάφρασης. Έγκρινε το πρωτότυπο πριν από τη μετάφραση και έλεγξε το αποτέλεσμα πριν την αποθήκευση.</p><p>Αποθήκευσε τα κείμενά σου πριν κλείσεις την εφαρμογή. Τα κείμενα δεν αποθηκεύονται αυτόματα.</p></div></dialog>
   <dialog id="info-dialog" aria-labelledby="info-title"><div class="models-header"><h2 id="info-title">Πληροφορίες</h2><button id="info-close" type="button" class="header-button">Κλείσιμο</button></div><div class="models-content"><p>Writer &amp; Translator · Τοπικό πρωτότυπο</p><p>Η εφαρμογή χρησιμοποιεί τοπικά μοντέλα. Έλεγχε τα παραγόμενα κείμενα.</p></div></dialog>
   <dialog id="models-dialog" aria-labelledby="models-title">
     <div class="models-header">

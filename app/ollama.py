@@ -48,16 +48,18 @@ def local_models():
     return sorted(set(names))
 
 
-def generate(model, text, task, direction="el-en"):
+def generate(model, text, task, direction="el-en", source_language="el", output_language="el"):
     if model not in local_models():
         raise OllamaError("Το επιλεγμένο τοπικό μοντέλο δεν είναι διαθέσιμο.")
     info = _request("/api/show", {"model": model})
     if not isinstance(info, dict) or info.get("remote_model") or info.get("remote_host"):
         raise OllamaError("Το μοντέλο δεν επιβεβαιώθηκε ως τοπικό.")
     if task == "write":
-        instruction = ("Δημιούργησε συνεκτικό ελληνικό κείμενο από τις σημειώσεις. "
-                       "Διατήρησε νόημα και ύφος, μην επινοήσεις γεγονότα ή πηγές. "
-                       "Επίστρεψε μόνο το κείμενο.")
+        if source_language not in ("el", "en") or output_language not in ("el", "en"):
+            raise OllamaError("Μη έγκυρη γλώσσα συγγραφής.")
+        languages = {"el": "Greek", "en": "English"}
+        instruction = (f"Create coherent {languages[output_language]} text from the {languages[source_language]} notes. "
+                       "Preserve meaning and voice; do not invent facts or sources. Return only the text.")
     elif task == "translate":
         if direction not in ("el-en", "en-el"):
             raise OllamaError("Μη έγκυρη κατεύθυνση μετάφρασης.")

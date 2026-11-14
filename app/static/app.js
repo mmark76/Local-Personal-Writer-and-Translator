@@ -1,6 +1,8 @@
 "use strict";
 const el = id => document.getElementById(id);
 let token = "", busy = false, draftApproved = false, finalApproved = false, translationValid = false, reverseApproved = false, dirty = false, initialModelPending = true;
+let draftLanguage = "el", draftHasText = false;
+const greekDraftApproved = () => draftApproved && draftLanguage === "el";
 const status = message => { el("status").textContent = message; };
 
 async function api(path, options) {
@@ -32,9 +34,9 @@ function resetDraft() { draftApproved = false; translationValid = false; el("tra
 function setBusy(value) {
   busy = value;
   ["write", "refresh", "approve-draft", "approve-final", "save-notes", "save-draft"].forEach(id => { el(id).disabled = value; });
-  ["notes", "draft", "translation", "model", "translation-model", "translation-engine", "writer-engine", "translation-direction", "english-source", "approve-source"].forEach(id => { el(id).disabled = value; });
+  ["notes", "draft", "translation", "model", "translation-model", "translation-engine", "writer-engine", "source-language", "output-language", "translation-direction", "english-source", "approve-source"].forEach(id => { el(id).disabled = value; });
   document.querySelectorAll(".text-actions button").forEach(button => { button.disabled = value; });
-  el("translate").disabled = value || !(el("translation-direction").value === "en-el" ? reverseApproved : draftApproved);
+  el("translate").disabled = value || !(el("translation-direction").value === "en-el" ? reverseApproved : greekDraftApproved());
   el("save").disabled = value || !finalApproved;
 }
 let stopRequested = false, activeJobId = "";
@@ -50,6 +52,7 @@ el("stop-generation").addEventListener("click", async () => {
 async function generate(task, text) {
   const engine = task === "write" ? el("writer-engine").value : el("translation-engine").value;
   const model = task === "write" ? el("model").value : el("translation-model").value;
+  if (task === "write" && engine === "nlg" && (el("source-language").value !== "el" || el("output-language").value !== "el")) { status("Το Offline NLG υποστηρίζει μόνο ελληνικές σημειώσεις και ελληνικό κείμενο. Επίλεξε Ollama για άλλον συνδυασμό."); return; }
   if (busy || !text.trim() || (engine === "ollama" && !model)) { status("Πρόσθεσε κείμενο και, για Ollama, επίλεξε μοντέλο."); return; }
   const target = task === "write" ? "draft" : "translation";
   if (el(target).value.trim() && !window.confirm(window.translateUi("Υπάρχει ήδη κείμενο σε αυτό το πεδίο. Να αντικατασταθεί;"))) return;
@@ -60,7 +63,7 @@ async function generate(task, text) {
     el("stop-generation").disabled = false;
     let data = await api(engine === "nlg" ? "/api/generate" : "/api/generation-start", {
       method: "POST", headers: {"Content-Type": "application/json", "X-Session-Token": token},
-      body: JSON.stringify({task, text, engine, direction: task === "translate" ? el("translation-direction").value : "el-en", model})
+      body: JSON.stringify({task, text, engine, direction: task === "translate" ? el("translation-direction").value : "el-en", model, source_language: task === "write" ? el("source-language").value : "el", output_language: task === "write" ? el("output-language").value : "el"})
     });
     if (engine !== "nlg") {
       activeJobId = data.id;
@@ -75,8 +78,9 @@ async function generate(task, text) {
       }
       if (data.state !== "completed") throw new Error(window.translateUi(data.error || "Η εργασία απέτυχε."));
     }
-    if (task === "write") { el("draft").value = data.text; resetDraft(); }
+    if (task === "write") { el("draft").value = data.text; draftLanguage = el("output-language").value; draftHasText = !!data.text; resetDraft(); }
     else { el("translation").value = data.text; translationValid = true; resetFinal(); }
+    updateWordCount(target);
     dirty = true; status(data.partial ? "Μερικό αποτέλεσμα: αμφίσημες ή μη ολοκληρωμένες σημειώσεις διατηρήθηκαν. Έλεγξέ τες πριν την έγκριση." : "Ολοκληρώθηκε. Έλεγξε το αποτέλεσμα.");
   } catch (err) { status(err.message + " " + window.translateUi("Το κείμενό σου παραμένει διαθέσιμο.")); }
   finally { activeJobId = ""; el("stop-generation").hidden = true; setBusy(false); }
@@ -88,6 +92,12 @@ el("writer-engine").addEventListener("change", () => {
     : "Το Ollama χρησιμοποιεί το μοντέλο που επέλεξες σε αυτή τη στήλη.";
   status("");
 });
+["source-language", "output-language"].forEach(id => el(id).addEventListener("change", () => {
+  if ((el("source-language").value !== "el" || el("output-language").value !== "el") && el("writer-engine").value === "nlg") {
+    el("writer-engine").value = "ollama";
+    el("writer-engine").dispatchEvent(new Event("change"));
+  }
+}));
 const columnSizes = ["minmax(250px, .92fr)", "minmax(330px, 1.17fr)", "minmax(280px, 1fr)"];
 const columnButtons = [...document.querySelectorAll(".panel-toggle")];
 function updateColumns() {
@@ -159,6 +169,10 @@ el("restart-local").addEventListener("click", async () => {
     status("Η επανεκκίνηση ζητήθηκε. Έλεγξε τη νέα καρτέλα στον browser.");
   } catch (err) { status(err.message); }
 });
+function updateWordCount(id) {
+  const words = el(id).value.trim().split(/\s+/u).filter(part => /[\p{L}\p{N}]/u.test(part));
+  el(`word-count-${id}`).textContent = String(words.length);
+}
 ["notes", "draft", "english-source", "translation"].forEach(id => {
   const field = el(id);
   const fieldLabel = field.labels[0];
@@ -182,7 +196,16 @@ el("restart-local").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(field.value); status("Το κείμενο αντιγράφηκε."); }
     catch { status("Η αντιγραφή απέτυχε. Επίλεξε και αντέγραψε το κείμενο χειροκίνητα."); }
   });
-  actions.append(clear, copy); field.insertAdjacentElement("afterend", actions);
+  const count = document.createElement("span");
+  count.className = "word-count";
+  const countLabel = document.createElement("span");
+  countLabel.textContent = "Λέξεις:";
+  const countValue = document.createElement("span");
+  countValue.id = `word-count-${id}`;
+  count.append(countLabel, " ", countValue);
+  actions.append(clear, copy, count); field.insertAdjacentElement("afterend", actions);
+  field.addEventListener("input", () => updateWordCount(id));
+  updateWordCount(id);
 });
 let argosPolling = false;
 async function refreshArgos() {
@@ -226,14 +249,14 @@ el("write").addEventListener("click", () => generate("write", el("notes").value)
 el("translate").addEventListener("click", () => {
   if (el("translation-direction").value === "en-el") {
     if (reverseApproved) generate("translate", el("english-source").value);
-  } else if (draftApproved) generate("translate", el("draft").value);
+  } else if (greekDraftApproved()) generate("translate", el("draft").value);
 });
 el("translation-direction").addEventListener("change", () => {
   const reverse = el("translation-direction").value === "en-el";
   el("reverse-input").hidden = !reverse;
   el("argos-install").textContent = reverse ? "Εγκατάσταση αγγλικά → ελληνικά" : "Εγκατάσταση ελληνικά → αγγλικά";
   el("translate").textContent = reverse ? "Μετάφραση στα ελληνικά →" : "Μετάφραση στα αγγλικά →";
-  el("translate").disabled = busy || !(reverse ? reverseApproved : draftApproved);
+  el("translate").disabled = busy || !(reverse ? reverseApproved : greekDraftApproved());
   translationValid = false; resetFinal();
   if (el("translation-engine").value === "argos") refreshArgos();
 });
@@ -249,14 +272,14 @@ el("approve-source").addEventListener("click", () => {
 });
 el("approve-draft").addEventListener("click", () => {
   if (!el("draft").value.trim()) return;
-  draftApproved = true; el("translate").disabled = busy || (el("translation-direction").value === "en-el" && !reverseApproved); el("draft-status").textContent = "Εγκρίθηκε για μετάφραση."; status("");
+  draftApproved = true; el("translate").disabled = busy || !(el("translation-direction").value === "en-el" ? reverseApproved : greekDraftApproved()); el("draft-status").textContent = draftLanguage === "en" ? "Το αγγλικό κείμενο εγκρίθηκε." : "Εγκρίθηκε για μετάφραση."; status("");
 });
 el("approve-final").addEventListener("click", () => {
-  if (!translationValid || !(el("translation-direction").value === "en-el" ? reverseApproved : draftApproved) || !el("translation").value.trim()) { status("Πρώτα ενέκρινε και μετάφρασε το τρέχον κείμενο."); return; }
+  if (!translationValid || !(el("translation-direction").value === "en-el" ? reverseApproved : greekDraftApproved()) || !el("translation").value.trim()) { status("Πρώτα ενέκρινε και μετάφρασε το τρέχον κείμενο."); return; }
   finalApproved = true; el("save").disabled = busy; el("final-status").textContent = "Εγκρίθηκε για αποθήκευση."; status("");
 });
 el("notes").addEventListener("input", () => { dirty = true; resetDraft(); });
-el("draft").addEventListener("input", () => { dirty = true; resetDraft(); });
+el("draft").addEventListener("input", () => { if (!draftHasText) draftLanguage = el("output-language").value; draftHasText = !!el("draft").value; dirty = true; resetDraft(); });
 el("translation").addEventListener("input", () => { dirty = true; resetFinal(); });
 function downloadText(content, filename) {
   const url = URL.createObjectURL(new Blob([content], {type: "text/plain;charset=utf-8"}));
@@ -268,7 +291,7 @@ el("save-notes").addEventListener("click", () => {
   if (el("notes").value.trim()) downloadText(el("notes").value, "notes.txt");
 });
 el("save-draft").addEventListener("click", () => {
-  if (el("draft").value.trim()) downloadText(el("draft").value, "greek-draft.txt");
+  if (el("draft").value.trim()) downloadText(el("draft").value, draftLanguage === "en" ? "english-draft.txt" : "greek-draft.txt");
 });
 el("save").addEventListener("click", () => {
   if (!finalApproved) return;

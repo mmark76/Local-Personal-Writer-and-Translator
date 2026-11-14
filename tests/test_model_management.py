@@ -41,7 +41,7 @@ class FakeOllama:
         if path == "/api/show":
             return {}
         if path == "/api/chat":
-            text = "Greek draft" if "Δημιούργησε" in data["messages"][0]["content"] else "English translation"
+            text = "Greek draft" if "Create coherent" in data["messages"][0]["content"] else "English translation"
             return {"done": True, "done_reason": "stop", "message": {"content": text}}
         raise AssertionError(path)
 

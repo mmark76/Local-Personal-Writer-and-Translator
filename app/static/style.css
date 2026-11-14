@@ -72,8 +72,9 @@ h3 { margin: 8px 0 5px; font-size: 1rem; }
 .card-tag { border: 1px solid #ffffff36; border-radius: 5px; padding: 4px 7px; color: #deded9; font-size: .7rem; white-space: nowrap; }
 textarea { width: 100%; flex: 1; min-height: 220px; resize: vertical; padding: 13px; border: 1px solid #ffffff31; border-radius: 7px; background: #171b1add; color: #f3f3ef; line-height: 1.6; }
 textarea::placeholder { color: #a7b2aa; opacity: 1; }
-.text-actions { display: flex; gap: 6px; margin-top: 8px; }
+.text-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
 .text-actions button { padding: 6px 10px; font-size: .8rem; }
+.word-count { margin-left: auto; color: #c7d0ca; font-size: .78rem; }
 .card-hint { color: #c7d0ca; font-size: .78rem; line-height: 1.45; margin: 10px 0 0; }
 .panel-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
 .panel-actions button { text-align: left; }
@@ -118,7 +119,7 @@ textarea::placeholder { color: #a7b2aa; opacity: 1; }
 .light select, .light textarea { background: #fff; color: #20201e; border-color: #999; }
 .light textarea::placeholder { color: #636a63; }
 .light .notes-card { background: #e3f0e7; } .light .draft-card { background: #e5eef5; } .light .translation-card { background: #f0e8f5; }
-.light .card-heading label, .light .card-hint, .light .card-kicker, .light .card-tag { color: #343833; }
+.light .card-heading label, .light .card-hint, .light .card-kicker, .light .card-tag, .light .word-count { color: #343833; }
 .light .header-button, .light .secondary { background: #e0e0da; color: #20201e; border-color: #999; }
 .light .app-header .header-button { background: transparent; border-color: transparent; }
 .light .app-header .header-button:hover:not(:disabled), .light .app-header .header-button[aria-pressed="true"] { background: #d5d5cd; }
