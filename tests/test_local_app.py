@@ -9,6 +9,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 import ollama
 import server
+import generation_jobs
 
 
 class OllamaTests(unittest.TestCase):
@@ -47,6 +48,25 @@ class OllamaTests(unittest.TestCase):
         with patch.object(ollama, "_request", side_effect=results) as request:
             self.assertEqual(ollama.generate("local:8b", "sample", "write"), "draft")
         self.assertFalse(request.call_args.args[1]["think"])
+
+    def test_writing_prompt_uses_selected_languages(self):
+        for source in ("el", "en"):
+            for output in ("el", "en"):
+                results = [{"models": [{"name": "local", "size": 1}]}, {},
+                           {"done": True, "done_reason": "stop", "message": {"content": "draft"}}]
+                with self.subTest(source=source, output=output), patch.object(ollama, "_request", side_effect=results) as request:
+                    ollama.generate("local", "notes", "write", "el-en", source, output)
+                    prompt = request.call_args.args[1]["messages"][0]["content"]
+                    self.assertIn("coherent " + {"el": "Greek", "en": "English"}[output], prompt)
+                    self.assertIn({"el": "Greek", "en": "English"}[source] + " notes", prompt)
+
+    def test_generation_worker_passes_writing_languages(self):
+        from unittest.mock import Mock
+        sender = Mock()
+        with patch.object(ollama, "generate", return_value="draft") as generate:
+            generation_jobs._run(sender, "write", "ollama", "local", "notes", "el-en", "en", "el")
+        generate.assert_called_once_with("local", "notes", "write", "el-en", "en", "el")
+        sender.send.assert_called_once_with({"state": "completed", "text": "draft"})
 
 
 class HttpBoundaryTests(unittest.TestCase):
@@ -91,6 +111,18 @@ class HttpBoundaryTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(json.loads(result), {"text": "draft"})
         generate.assert_called_once_with("local:8b", "sample", "write")
+
+    def test_language_selection_reaches_writer_and_nlg_rejects_english(self):
+        headers = {"Content-Type": "application/json", "Origin": self.origin, "X-Session-Token": server.TOKEN}
+        body = {"model": "local", "text": "notes", "task": "write", "source_language": "el", "output_language": "en"}
+        with patch.object(ollama, "generate", return_value="draft") as generate:
+            code, _ = self.request("POST", "/api/generate", json.dumps(body), headers)
+        self.assertEqual(code, 200)
+        generate.assert_called_once_with("local", "notes", "write", "el-en", "el", "en")
+        body["engine"] = "nlg"
+        self.assertEqual(self.request("POST", "/api/generate", json.dumps(body), headers)[0], 400)
+        body["output_language"] = "fr"
+        self.assertEqual(self.request("POST", "/api/generate", json.dumps(body), headers)[0], 400)
 
     def test_unapproved_model_does_not_trigger_chat(self):
         with patch.object(ollama, "_request", return_value={"models": []}) as request:

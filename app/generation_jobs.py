@@ -5,14 +5,17 @@ from multiprocessing.connection import wait
 import threading
 
 
-def _run(send, task, engine, model, text, direction):
+def _run(send, task, engine, model, text, direction, source_language="el", output_language="el"):
     try:
         if engine == "argos":
             import argos_translation
             result = argos_translation.translate(text, "en", "el") if direction == "en-el" else argos_translation.translate(text)
         else:
             import ollama
-            result = ollama.generate(model, text, task, "en-el") if task == "translate" and direction == "en-el" else ollama.generate(model, text, task)
+            if task == "write" and (source_language != "el" or output_language != "el"):
+                result = ollama.generate(model, text, task, direction, source_language, output_language)
+            else:
+                result = ollama.generate(model, text, task, "en-el") if task == "translate" and direction == "en-el" else ollama.generate(model, text, task)
         send.send({"state": "completed", "text": result})
     except Exception as exc:
         # Known adapters provide user-facing messages, never user text.
@@ -44,14 +47,17 @@ class GenerationJobs:
                 return old.copy() if old else None
             return self.job.copy()
 
-    def start(self, task, engine, model, text, direction):
+    def start(self, task, engine, model, text, direction, source_language="el", output_language="el"):
         if not self.busy.acquire(blocking=False):
             raise GenerationBusy()
         receiver = sender = process = None
         try:
             ctx = multiprocessing.get_context("spawn")
             receiver, sender = ctx.Pipe(duplex=False)
-            process = ctx.Process(target=_run, args=(sender, task, engine, model, text, direction), daemon=True)
+            args = (sender, task, engine, model, text, direction)
+            if source_language != "el" or output_language != "el":
+                args += (source_language, output_language)
+            process = ctx.Process(target=_run, args=args, daemon=True)
             process.start()
             sender.close()
             with self.lock:

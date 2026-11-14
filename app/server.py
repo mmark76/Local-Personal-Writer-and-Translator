@@ -156,11 +156,15 @@ class Handler(BaseHTTPRequestHandler):
             text, model, task = request.get("text"), request.get("model"), request.get("task")
             engine = request.get("engine", "ollama")
             direction = request.get("direction", "el-en")
+            source_language = request.get("source_language", "el")
+            output_language = request.get("output_language", "el")
             if (not isinstance(text, str) or not text.strip() or len(text) > MAX_INPUT
                     or task not in ("write", "translate")
                     or (task == "write" and engine not in ("ollama", "nlg"))
                     or (task == "translate" and engine not in ("ollama", "argos"))
                     or direction not in ("el-en", "en-el")
+                    or source_language not in ("el", "en") or output_language not in ("el", "en")
+                    or (engine == "nlg" and (source_language != "el" or output_language != "el"))
                     or (engine == "ollama" and not isinstance(model, str))):
                 raise ValueError()
         except (ValueError, UnicodeDecodeError):
@@ -169,6 +173,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.respond(200, nlg_writer.generate(text))
         if self.path == "/api/generation-start":
             try:
+                if task == "write" and (source_language != "el" or output_language != "el"):
+                    return self.respond(202, JOBS.start(task, engine, model, text, direction, source_language, output_language))
                 return self.respond(202, JOBS.start(task, engine, model, text, direction))
             except generation_jobs.GenerationBusy:
                 return self.respond(409, {"error": "Μια εργασία βρίσκεται ήδη σε εξέλιξη."})
@@ -181,7 +187,7 @@ class Handler(BaseHTTPRequestHandler):
                 result = (argos_translation.translate(text, "en", "el") if direction == "en-el"
                           else argos_translation.translate(text))
             else:
-                result = (ollama.generate(model, text, task, "en-el") if task == "translate" and direction == "en-el"
+                result = (ollama.generate(model, text, task, direction, source_language, output_language) if task == "write" and (source_language != "el" or output_language != "el") else ollama.generate(model, text, task, "en-el") if task == "translate" and direction == "en-el"
                           else ollama.generate(model, text, task))
             return self.respond(200, {"text": result})
         except (ollama.OllamaError, argos_translation.ArgosError) as exc:
